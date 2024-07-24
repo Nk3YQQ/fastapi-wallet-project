@@ -1,0 +1,7 @@
+fastapi[all]
+tortoise-orm[asyncpg]
+aerich
+python-dotenv
+black
+isort
+flake8
