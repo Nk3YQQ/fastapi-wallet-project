@@ -1,28 +1,26 @@
 # Структура проекта
 ```
 fastapi-wallet-project/
-    |—— coverage/ # Результаты тестрования
+    |—— config/ # Настройки проекта
+        |—— __init__.py
+        |—— database.py
+        |—— settings.py
+    |—— migartions/ # Миграции проекта
     |—— nginx/ # Настройки для Nginx
     |—— tests/ # Тесты для приложений
         |—— conftest.py
-        |—— test_wallet.py
-        |—— test_users.py
     |—— users/ # Приложение пользователей
-        |—— migartions/
         |—— __init__.py
-        |—— database.py
         |—— models.py
+        |—— routers.py
         |—— schemas.py
         |—— services.py
-        |—— routers.py
     |—— wallet/ # Приложение кошелька
-        |—— migrations/
         |—— __init__.py
-        |—— database.py
+        |—— crud.py
         |—— models.py
-        |—— schemas.py
-        |—— services.py
         |—— routers.py
+        |—— schemas.py
     |—— .dockerignore
     |—— .env.sample
     |—— .flake8
@@ -31,9 +29,33 @@ fastapi-wallet-project/
     |—— Dockerfile
     |—— LICENSE
     |—— Makefile
-    |—— manage.py
+    |—— main.py
     |—— poetry.lock
     |—— pyproject.toml
     |—— README.md
     |—— requirements.txt
+```
+
+# Как пользоваться проектом
+
+## 1) Скопируйте проект на Ваш компьютер
+```
+git clone git@github.com:Nk3YQQ/fastapi-wallet-project.git
+```
+
+## 2) Добавьте файл .env для переменных окружения
+Чтобы запустить проект, понадобятся переменные окружения, которые необходимо добавить в созданный Вами .env файл.
+
+Пример переменных окружения необходимо взять из файла .env.sample
+
+## 3) Запустите проект
+
+Запуск проекта
+```
+make run
+```
+
+Остановка проекта
+```
+make stop
 ```
