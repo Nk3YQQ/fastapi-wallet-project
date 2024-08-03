@@ -1,13 +1,13 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from config.settings import SECRET_KEY, ALGORITHM
-from users.schemas import TokenData
+from config.settings import ALGORITHM, SECRET_KEY
 from users.models import User
+from users.schemas import TokenData
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -15,25 +15,25 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 
 def verify_password(plain_password, hashed_password):
-    """ Функция для верификации паролей """
+    """Функция для верификации паролей"""
 
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password):
-    """ Функция для хеширования паролей """
+    """Функция для хеширования паролей"""
 
     return pwd_context.hash(password)
 
 
 async def get_user(email: str):
-    """ Функция для получения пользователя по почте """
+    """Функция для получения пользователя по почте"""
 
     return await User.filter(email=email).first()
 
 
 async def authenticate_user(email: str, password: str):
-    """ Функция для аутентификации пользователя """
+    """Функция для аутентификации пользователя"""
 
     user = await get_user(email)
 
@@ -47,7 +47,7 @@ async def authenticate_user(email: str, password: str):
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    """ Функция для создания access токена """
+    """Функция для создания access токена"""
 
     to_encode = data.copy()
 
@@ -65,7 +65,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    """ Функция для получения текущего пользователя """
+    """Функция для получения текущего пользователя"""
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -94,12 +94,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 async def check_passport(passport_series, passport_number):
-    """ Функция проверяет, существует ли пользователь с соответствующим паспортом """
+    """Функция проверяет, существует ли пользователь с соответствующим паспортом"""
 
     user = await User.filter(passport_series=passport_series, passport_number=passport_number).first()
 
     if user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='User with these series and number already exist'
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User with these series and number already exist"
         )
