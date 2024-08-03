@@ -6,7 +6,7 @@ str_150 = Annotated[str, StringConstraints(max_length=150)]
 str_100 = Annotated[str, StringConstraints(max_length=100)]
 
 
-class UserSerializer(BaseModel):
+class User(BaseModel):
     """ Базовая модель для пользователя """
 
     model_config = ConfigDict(from_attributes=True)
@@ -17,25 +17,39 @@ class UserSerializer(BaseModel):
     email: str
     passport_series: str
     passport_number: str
-    wallets: list['WalletSerializer']
 
 
-class WalletSerializer(BaseModel):
+class Wallet(BaseModel):
     """ Базовая модель для кошелька """
 
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    number: str
     balance: int
-    currency: str
+    currency: Literal['USD', 'EUR', 'RUB', 'CNY']
     wallet_type: Literal['main', 'bonus', 'saving']
-    owner: UserSerializer
+    owner: User
 
 
 class WalletCreateSerializer(BaseModel):
     """ Модель для создания кошелька """
 
-    balance: int
-    currency: str
+    currency: Literal['USD', 'EUR', 'RUB', 'CNY']
     wallet_type: Literal['main', 'bonus', 'saving']
-    owner_id: int
+
+
+class WalletUpdateSerializer(BaseModel):
+    """ Модель для обновления кошелька """
+
+    balance: int
+    currency: Literal['USD', 'EUR', 'RUB', 'CNY']
+    wallet_type: Literal['main', 'bonus', 'saving']
+
+
+class WalletUpdateParticularSerializer(BaseModel):
+    """ Модель для частичного обновления кошелька """
+
+    balance: int | None = None
+    currency: Literal['USD', 'EUR', 'RUB', 'CNY'] | None = None
+    wallet_type: Literal['main', 'bonus', 'saving'] | None = None
