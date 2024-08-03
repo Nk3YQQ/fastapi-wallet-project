@@ -7,8 +7,6 @@ fastapi-wallet-project/
         |—— settings.py
     |—— migartions/ # Миграции проекта
     |—— nginx/ # Настройки для Nginx
-    |—— tests/ # Тесты для приложений
-        |—— conftest.py
     |—— users/ # Приложение пользователей
         |—— __init__.py
         |—— models.py
@@ -35,6 +33,16 @@ fastapi-wallet-project/
     |—— README.md
     |—— requirements.txt
 ```
+
+# Основной стек проекта
+
+- ### Python 3.10
+- ### FastAPI
+- ### Pydantic
+- ### Aerich
+- ### Docker
+- ### uvicorn
+- ### Nginx
 
 # Как пользоваться проектом
 
