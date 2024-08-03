@@ -1,24 +1,17 @@
-import os
-from datetime import datetime, timedelta
+from datetime import timedelta, datetime
 
-from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
-from users.models import User
+from config.settings import SECRET_KEY, ALGORITHM
 from users.schemas import TokenData
-
-load_dotenv()
-
-SECRET_KEY = os.getenv('SECRET_KEY')
-ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_HOURS = 2
+from users.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 
 def verify_password(plain_password, hashed_password):
@@ -36,7 +29,7 @@ def get_password_hash(password):
 async def get_user(email: str):
     """ Функция для получения пользователя по почте """
 
-    return await User.get(email=email)
+    return await User.filter(email=email).first()
 
 
 async def authenticate_user(email: str, password: str):
@@ -87,7 +80,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         if email is None:
             raise credentials_exception
 
-        token_data = TokenData(username=email)
+        token_data = TokenData(email=email)
 
     except JWTError:
         raise credentials_exception
@@ -98,3 +91,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
 
     return user
+
+
+async def check_passport(passport_series, passport_number):
+    """ Функция проверяет, существует ли пользователь с соответствующим паспортом """
+
+    user = await User.filter(passport_series=passport_series, passport_number=passport_number).first()
+
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='User with these series and number already exist'
+        )

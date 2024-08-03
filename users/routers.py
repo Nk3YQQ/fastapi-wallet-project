@@ -1,31 +1,41 @@
 from datetime import timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
+from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import IntegrityError
 
-from users.auth import (get_password_hash, authenticate_user, ACCESS_TOKEN_EXPIRE_HOURS, create_access_token,
-                        get_current_user)
+from config.settings import ACCESS_TOKEN_EXPIRE_HOURS
+from users.services import get_password_hash, authenticate_user, create_access_token, get_current_user, check_passport
 from users.models import User
-from users.schemas import UserSerializer, UserRegistrationSerializer, Token
+from users.schemas import UserRegistrationSerializer, User as UserSerializer, Token, UserUpdateSerializer, \
+    UserWithWallets
 
 router = APIRouter()
 
+UserPydantic = pydantic_model_creator(User)
 
-@router.post('/register/', response_model=UserSerializer)
-async def register_user(user: UserRegistrationSerializer):
+
+@router.post('/registration',
+             response_model=UserSerializer,
+             status_code=status.HTTP_201_CREATED,
+             description='Create a new user')
+async def registration(form_data: UserRegistrationSerializer):
     """ Контроллер для регистрации пользователя """
 
-    hashed_password = get_password_hash(user.password)
+    await check_passport(form_data.passport_series, form_data.passport_number)
 
     try:
+        hashed_password = get_password_hash(form_data.password)
+
         user_obj = await User.create(
-            first_name=user.first_name,
-            last_name=user.last_name,
-            email=user.email,
+            first_name=form_data.first_name,
+            last_name=form_data.last_name,
+            email=form_data.email,
             password=hashed_password,
-            passport_serias=user.passport_series,
-            passport_number=user.passport_number
+            passport_series=form_data.passport_series,
+            passport_number=form_data.passport_number
         )
 
     except IntegrityError:
@@ -34,14 +44,18 @@ async def register_user(user: UserRegistrationSerializer):
             detail='User with current email is already registered'
         )
 
-    return user_obj
+    user = await UserPydantic.from_tortoise_orm(user_obj)
+
+    return user
 
 
-@router.post('/token/', response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    """ Контроллер для получения access токена """
+@router.post('/login', response_model=Token, description='Login for user')
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    """ Контроллер для авторизации и получения токена доступа """
+    email = form_data.username
+    password = form_data.password
 
-    user = await authenticate_user(form_data.username, form_data.password)
+    user = await authenticate_user(email, password)
 
     if not user:
         raise HTTPException(
@@ -59,8 +73,32 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get('/me/', response_model=User)
+@router.get('/profile', response_model=UserWithWallets, description='Get the profile of current user')
 async def read_current_user(current_user: User = Depends(get_current_user)):
     """ Контроллер для получения текущего пользователя """
 
-    return current_user
+    user = await User.filter(id=current_user.id).prefetch_related('wallets').first()
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+
+    return user
+
+
+@router.patch('/profile/update', response_model=UserSerializer, description='Update the profile of current user')
+async def update_current_user(form_data: UserUpdateSerializer, current_user: User = Depends(get_current_user)):
+    """ Контроллер для обновления текущего пользователя """
+
+    print(form_data.model_dump())
+
+    user = await User.filter(id=current_user.id).prefetch_related('wallets').first()
+
+    user_data = dict(form_data)
+
+    for key, value in user_data.items():
+        if value:
+            setattr(user, key, value)
+
+    await user.save()
+
+    return user
