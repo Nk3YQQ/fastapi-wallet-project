@@ -1,4 +1,4 @@
-from typing import Literal, Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, StringConstraints
 
@@ -7,7 +7,7 @@ str_100 = Annotated[str, StringConstraints(max_length=100)]
 
 
 class User(BaseModel):
-    """ Базовая модель для пользователя """
+    """Базовая модель для пользователя"""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -20,36 +20,36 @@ class User(BaseModel):
 
 
 class Wallet(BaseModel):
-    """ Базовая модель для кошелька """
+    """Базовая модель для кошелька"""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     number: str
     balance: int
-    currency: Literal['USD', 'EUR', 'RUB', 'CNY']
-    wallet_type: Literal['main', 'bonus', 'saving']
+    currency: Literal["USD", "EUR", "RUB", "CNY"]
+    wallet_type: Literal["main", "bonus", "saving"]
     owner: User
 
 
 class WalletCreateSerializer(BaseModel):
-    """ Модель для создания кошелька """
+    """Модель для создания кошелька"""
 
-    currency: Literal['USD', 'EUR', 'RUB', 'CNY']
-    wallet_type: Literal['main', 'bonus', 'saving']
+    currency: Literal["USD", "EUR", "RUB", "CNY"]
+    wallet_type: Literal["main", "bonus", "saving"]
 
 
 class WalletUpdateSerializer(BaseModel):
-    """ Модель для обновления кошелька """
+    """Модель для обновления кошелька"""
 
     balance: int
-    currency: Literal['USD', 'EUR', 'RUB', 'CNY']
-    wallet_type: Literal['main', 'bonus', 'saving']
+    currency: Literal["USD", "EUR", "RUB", "CNY"]
+    wallet_type: Literal["main", "bonus", "saving"]
 
 
 class WalletUpdateParticularSerializer(BaseModel):
-    """ Модель для частичного обновления кошелька """
+    """Модель для частичного обновления кошелька"""
 
     balance: int | None = None
-    currency: Literal['USD', 'EUR', 'RUB', 'CNY'] | None = None
-    wallet_type: Literal['main', 'bonus', 'saving'] | None = None
+    currency: Literal["USD", "EUR", "RUB", "CNY"] | None = None
+    wallet_type: Literal["main", "bonus", "saving"] | None = None
